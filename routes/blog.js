@@ -1,6 +1,9 @@
 const express = require("express");
+const mongodb = require("mongodb");
 
 const db = require("../data/database");
+// this objectId is to identify each author
+const ObjectId = mongodb.ObjectId;
 
 const router = express.Router();
 
@@ -17,13 +20,26 @@ router.get("/new-post", async function (req, res) {
   res.render("create-post", { authors });
 });
 
-// router.post('/posts', (req, res){
-//   const newPost = {
-//     title: req.body.title,
-//     summary: req.body.summary,
-//     body: req.body.body,
-//     date: new Date()
-//   }
-// })
+router.post("/posts", async (req, res) => {
+  const authorId = new ObjectId(req.body.author);
+  const author = await db
+    .getDb()
+    .collection("authors")
+    .findOne({ _id: authorId });
+  const newPost = {
+    title: req.body.title,
+    summary: req.body.summary,
+    body: req.body.content,
+    date: new Date(),
+    author: {
+      id: authorId,
+      name: author.name,
+      email: author.email,
+    },
+  };
+  const result = await db.getDb().collection("posts").insertOne(newPost);
+  console.log(result);
+  res.redirect("/posts");
+});
 
 module.exports = router;
