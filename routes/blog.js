@@ -46,13 +46,18 @@ router.post("/posts", async (req, res) => {
   console.log(result);
   res.redirect("/posts");
 });
-
+// here next is used if error occurs, it will go to next error handling in middleware
 router.get("/posts/:id", async (req, res) => {
-  const postId = req.params.id;
+  let postId = req.params.id;
+  try {
+    postId = new ObjectId(postId);
+  } catch (error) {
+    return res.status(404).render("404");
+  }
   const post = await db
     .getDb()
     .collection("posts")
-    .findOne({ _id: new ObjectId(postId) }, { summary: 0 });
+    .findOne({ _id: postId }, { summary: 0 });
 
   if (!post) {
     return res.status(404).render("404");
